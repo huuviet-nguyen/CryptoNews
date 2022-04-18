@@ -12,6 +12,8 @@ class HomeViewModel: ObservableObject {
     @Published var allCoins: [CoinModel] = []
     @Published var portfolioCoins: [CoinModel] = []
     
+    @Published var saerchText: String = ""
+    
     private let dataService = CoinDataService()
     
     private var cancellables = Set<AnyCancellable>()
