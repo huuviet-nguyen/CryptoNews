@@ -24,12 +24,14 @@ class NetworkingMananger {
         }
     }
     
-    static func download(url: URL) -> AnyPublisher<Data, Error> {
-        return URLSession.shared.dataTaskPublisher(for: url)
-            .subscribe(on: DispatchQueue.global(qos: .default))
-            .tryMap { try handleURLResponse(output: $0, url: url)}
-            .receive(on: DispatchQueue.main)
-            .eraseToAnyPublisher()
+    static func download(url: URL) async throws -> Data {
+        let (data, response) = try await URLSession.shared.data(from: url)
+        guard let response = response as? HTTPURLResponse,
+              response.statusCode >= 200,
+              response.statusCode < 300 else {
+                  throw NetworkingError.badURLResponse(url: url)
+              }
+        return data
     }
     
     static func handleURLResponse(output: URLSession.DataTaskPublisher.Output, url: URL) throws -> Data {
@@ -38,14 +40,5 @@ class NetworkingMananger {
                   throw NetworkingError.badURLResponse(url: url)
               }
         return output.data
-    }
-    
-    static func handlerCompletion(completion: Subscribers.Completion<Error>) {
-        switch completion {
-        case .finished:
-            break
-        case .failure(let error):
-            print(error.localizedDescription)
-        }
     }
 }

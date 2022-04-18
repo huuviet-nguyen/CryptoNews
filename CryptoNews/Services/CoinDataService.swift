@@ -14,17 +14,18 @@ class CoinDataService {
     var coinSubscription: AnyCancellable?
     
     init() {
-        getCoins()
+        Task {
+            await getCoins()
+        }
     }
     
-    private func getCoins() {
+    private func getCoins() async {
         guard let url = URL(string: "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=1&sparkline=true&price_change_percentage=24h") else { return }
-        
-        coinSubscription = NetworkingMananger.download(url: url)
-            .decode(type: [CoinModel].self, decoder: JSONDecoder())
-            .sink(receiveCompletion: NetworkingMananger.handlerCompletion, receiveValue: { [weak self] coins in
-                self?.allCoins = coins
-                self?.coinSubscription?.cancel()
-            })
+        do {
+            let data = try await NetworkingMananger.download(url: url)
+            allCoins = try JSONDecoder().decode([CoinModel].self, from: data)
+        } catch {
+            print(error)
+        }
     }
 }

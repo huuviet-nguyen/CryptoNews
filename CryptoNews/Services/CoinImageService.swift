@@ -16,19 +16,20 @@ class CoinImageService {
     private let coin: CoinModel
     init(coin: CoinModel) {
         self.coin = coin
-        getCoinImage()
+        Task {
+            await getCoinImage()
+        }
+        
     }
     
-    private func getCoinImage() {
+    private func getCoinImage() async {
         guard let url = URL(string: coin.image) else { return }
         
-        imageSubscription = NetworkingMananger.download(url: url)
-            .tryMap({ data -> UIImage? in
-                return UIImage(data: data)
-            })
-            .sink(receiveCompletion: NetworkingMananger.handlerCompletion, receiveValue: { [weak self] returnImage in
-                self?.image = returnImage
-                self?.imageSubscription?.cancel()
-            })
+        do {
+            let data = try await NetworkingMananger.download(url: url)
+            self.image = UIImage(data: data)
+        } catch {
+            print(error)
+        }
     }
 }

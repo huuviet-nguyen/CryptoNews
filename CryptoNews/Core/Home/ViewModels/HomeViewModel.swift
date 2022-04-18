@@ -21,7 +21,9 @@ class HomeViewModel: ObservableObject {
     }
     
     func addSubscribers() {
-        dataService.$allCoins.sink { [weak self] coins in
+        dataService.$allCoins
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] coins in
             self?.allCoins = coins
         }
         .store(in: &cancellables)
